@@ -102,44 +102,37 @@ for(i in 1:40){
   ord.forest.datatest <- ETLfold.i[ord.forest.testind,]
   
   ord_x_tr <- as.matrix(ord.forest.datatrain[,input.cols])
+  cvtypey <- ord.forest.datatrain[,11]
   ord_y_tr<- factor(ord.forest.datatrain[,11],levels)#factor(folds.input.data.i$OrdinalETL,levels)
   ord_x_te <- as.matrix(ord.forest.datatest[,input.cols])
-  ord_y_te<-  as.factor(ord.forest.datatest[,11])
+  ord_y_te<-  ord.forest.datatest[,11]
   
-  x_net <- head(ord_x_tr)
-  y_net <- head(ord_y_tr)
-  ordnet <- ordinalNet(x_net, y_net, family="cumulative", link="logit",
+  x_net = as.matrix(datatrain[,input.cols])
+  y_net = as.integer(ord_y_tr)#as.factor(datatrain[,11])
+  ordnet <- ordinalNet(head(x_net),head(y_net) , family="cumulative", link="logit",
                        parallelTerms=TRUE, nonparallelTerms=FALSE)
-  
-  predict(ordnet,newx=head(ord_x_te), type="response")
-  predict(ordnet,newx=head(ord_x_te), type="class")
-  f <- factor(head(ord_y_te), levels) 
-  as.integer(f)
-  obs <- as.integer(head(ord_y_te))
-  
-  x = as.matrix(datatrain[,input.cols])
-  y = datatrain[,11 ]
+  y_got <- predict(ordnet,newx=head(ord_x_te), type="class")
   
   x_train = as.matrix(datatrain[,input.cols])
   y_train = as.factor(datatrain[,11])
   x_test = as.matrix(datatest[,input.cols])
   y_obs =  datatest[,11 ]
   
-  x_net = as.matrix(datatrain[,input.cols])
-  y_net = as.factor(datatrain[,11])
-  
-  colnames(x_net)<-NULL
-  rownames(x_net)<-NULL
-  cv.fit.gaussian <- cv.glmnet(x_train,y)
-
-  print(ordnet)
+  cv.glmnet <- cv.glmnet(x_net,head(datatrain[,11],50))
+  # glmnet.gaussian=as.numeric(predict(cv.glmnet,newx=head(x_test,50),s=cv.glmnet$lambda.1se,type="class"))
+  # 
+  # predict(cv.glmnet,newx=head(ord_x_te), type="response")
+  # predict(cv.glmnet,newx=head(ord_x_te), type="class")
+  # f <- factor(head(ord_y_te), levels) 
+  # as.integer(f)
+  # obs <- as.integer(head(ord_y_te))
   
   predictions.list <-  list(
     glmnet.gaussian=as.numeric(predict(cv.fit.gaussian,newx=as.matrix(datatest[,input.cols]),s=cv.fit.gaussian$lambda.1se,type="response")),
     baseline.l0=one.pred(as.numeric.factor(freq[which.max(freq$Freq),]$y)),
     baseline.l1=one.pred(median.ind.val),
     baseline.l2=one.pred(mean.ind.val),
-    ordnet.pred = ordnet)
+    ordnet.pred = predict(ordnet,newx=head(ord_x_te), type="class"))
   
   accuracy.dt.list <- list()
   for(algo in names(predictions.list)){
@@ -149,7 +142,7 @@ for(i in 1:40){
     d = y_obs - pred.vec
     accuracy.dt.list[[algo]] <- data.table(
       algo.name = algo,
-      accuracy= 1-(sum((d)^2)/sum((y_obs-mean(y_obs))^2))
+      error.percent= sqrt(mean((pred.vec - y_obs)^2))#1-(sum((d)^2)/sum((y_obs-mean(y_obs))^2))
       #(mae(y_obs,pred.vec))#mae(y_obs,pred.vec)*100 #sqrt(mean((y_obs - pred.vec)^2))*100
     )#mean((pred.vec-y_obs)^2) * 100 )#mean((y_obs-pred.vec)^2) * 100)
   }
@@ -225,5 +218,19 @@ fit1 <- ordinalNet(head(x_train), head(y_train), family = "cumulative", link = "
 predict(fit1,newx=x_test, type="response")
 
 
+x = as.matrix(datatrain[,input.cols])
+y = datatrain[,11 ]
+
+x_train = as.matrix(datatrain[,input.cols])
+y_train = as.factor(datatrain[,11])
+x_test = as.matrix(datatest[,input.cols])
+y_obs =  datatest[,11 ]
+
+x_net = as.matrix(datatrain[,input.cols])
+y_net = as.factor(datatrain[,11])
+
+colnames(x_net)<-NULL
+rownames(x_net)<-NULL
+cv.fit.gaussian <- cv.glmnet(x_train,y)
 
 

@@ -17,7 +17,7 @@ weight.vec <- coef(cv.fit)[-1,]
 lasso_predictions <- predict(cv.fit,newx = x,s=cv.fit$lambda.1se,type="response")
 
 
-input.data <- data.table::fread("/Users/akhilachowdarykolla/Downloads/ReducedCoaching+CWISUpdated+NCES- binary.csv")
+input.data<- data.table::fread("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/data/ReducedCoaching+CWISUpdated+NCES- binary.csv")
 head(input.data)
 print(names(input.data))
 #total rows = 25547
@@ -93,7 +93,7 @@ ETLdatatest <- ETLinput.data.updatedTypes[testind,]
 
 training_dataset <- as.matrix(datatrain[,input.cols ])
 y_train <- datatrain[,11 ] 
-ETLy_train = ETLdatatrain[,11]
+ETLy_train = factor(ETLdatatrain[,11],levels)
 testing_dataset <- as.matrix(datatest[,input.cols ])
 y_test <- datatest[,11 ] 
 ETLy_test = ETLdatatest[,11]
@@ -110,9 +110,11 @@ plot(cvob1a)
 coef(cvob1a)
 
 
-cv.fit = cv.glmnet(training_dataset, ETLy_train,family = "multinomial")
+cv.fit = cv.glmnet(head(training_dataset,50), head(ETLy_train,50),family = "multinomial",type.measure = "mae")
 plot(cv.fit)
-preds <- predict(cv.fit, newx = training_dataset, type = "response", s = 0.01)
+preds <- predict(cv.fit, newx = training_dataset, type = "class", s = 0.01)
+preds
+as.numeric(preds)
 title("Multinomial Family", line = 2.5)
 frame()
 

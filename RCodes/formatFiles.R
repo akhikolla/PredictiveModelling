@@ -179,6 +179,7 @@ nces.coaching <- merge(required.nces.cols, required.coaching.cols, by = "State.D
 write.csv(nces.coaching,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/nces_coachingdata.csv", row.names = TRUE)
 
 cwis.nces.coaching <- merge(required.cwis.cols, nces.coaching, by = "State.District.ID")
+write.csv(required.cwis.cols,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/cwisdata.csv", row.names = TRUE)
 
 system.time(
   cwis.nces.coaching <- merge(required.cwis.cols, nces.coaching, by = "State.District.ID")

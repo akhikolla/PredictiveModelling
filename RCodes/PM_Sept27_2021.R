@@ -4,7 +4,9 @@ library(datarium)
 library(glmnet)
 
 #/Users/akhilachowdarykolla/Desktop/ReducedCoaching+CWISUpdated+NCES.csv
-input.data <- data.table::fread("/Users/akhilachowdarykolla/Downloads/ReducedCoaching+CWISUpdated+NCES- binary.csv")
+# input.data <- data.table::fread("/Users/akhilachowdarykolla/Downloads/ReducedCoaching+CWISUpdated+NCES- binary.csv")
+# head(input.data)
+input.data<- data.table::fread("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/data/ReducedCoaching+CWISUpdated+NCES- binary.csv")
 head(input.data)
 print(names(input.data))
 #total rows = 25547
@@ -68,7 +70,7 @@ y_test <- datatest[,11 ]
   
 
 # cv.fit = cv.glmnet(x, y,alpha=1,type.measure = "mse")
-cv.fit = cv.glmnet(training_dataset,y_train,family="multinomial", alpha=0.9,type.measure = "class")
+cv.fit = cv.glmnet(head(training_dataset),head(y_train),family="multinomial", alpha=0.9,type.measure = "class")
 # cv.fit = cv.glmnet(x, y,alpha=1,type.measure = "mae")
 # cv.fit = cv.glmnet(x, y,family="multinomial",alpha=1,type.measure = "class")
 res <- coef(cv.fit, s = cv.fit$lambda.min)
