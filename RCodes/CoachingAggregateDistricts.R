@@ -44,6 +44,11 @@ for(i in 1:nrow(coaching.dt)){
   row <- coaching.dt[i,]
   col_val <- paste0(row$State.District.ID,"_",row$Districts)
   aggregate.dt.list[[col_val]] <- data.table(
+    Year = row$Year,
+    Month = row$Month,
+    Day = row$Day,
+    Duration.of.Event = row$Duration.of.Event,
+    Interaction.Type = row$Interaction.Type,
     State.District.ID = 0 , 
     Districts = 0,
     #Duration.of.Event = 0,
