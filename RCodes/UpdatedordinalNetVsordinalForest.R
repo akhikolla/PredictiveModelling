@@ -4,7 +4,7 @@ library(ggplot2)
 library(tidyverse)
 library(caret)
 library("ordinalNet")
-
+library("ordinalForest")
 library(tidyverse)
 library(caret)
 library("datarium")
@@ -90,28 +90,29 @@ for(i in 1:40){
   ord_y_test <- datatest[,12]
   y_test <- datatest[,11]
   
+  ordfor_train <- datatrain[,-c(11,13)]
+  ordfor_test <- datatest[,-c(11,12,13)]
+  
   train <- as.matrix(datatrain[,input.cols])
   test <-  as.matrix(datatest[,input.cols])
   
+  
+  ordforres <- ordfor(depvar="OrdinalAverage", data=ordfor_train, nsets=1000, ntreeperdiv=100,
+                      ntreefinal=5000, perffunction = "probability")
+  
+  
   ordnet <- ordinalNet(train,ord_y, family="cumulative", link="logit",
                        parallelTerms=TRUE, nonparallelTerms=FALSE)
+  # ordnetParallel <- ordinalNet(train,ord_y, family="cumulative", link="logit",
+  #                      parallelTerms=TRUE, nonparallelTerms=FALSE)
+  # ordnetSemiParallel <- ordinalNet(train,ord_y, family="cumulative", link="logit",
+  #                      parallelTerms=TRUE, nonparallelTerms=FALSE)
+  # ordnetNonParallel
   
-  
-  cv.fit.gaussian <- cv.glmnet(train,y_train)
-  
-  one.pred <- function(x)rep(x, nrow(test))
-  as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
-  freq <-as.data.frame(table(y_train))
-  median.values <- sort(y_train)
-  median.ind.val <- median(median.values)
-  mean.ind.val <- mean(y_train)
-  
-  predictions.list <-  list(
-    glmnet.gaussian=as.numeric(predict(cv.fit.gaussian,newx=test,s=cv.fit.gaussian$lambda.1se,type="response")),
-    baseline.l0=one.pred(as.numeric.factor(freq[which.max(freq$Freq),]$y_train)),
-    baseline.l1=one.pred(median.ind.val),
-    baseline.l2=one.pred(mean.ind.val),
-    ordnet.pred = predict(ordnet,newx=test, type="class"))
+  predictions.list <-  list( 
+    ordinalNet = predict(ordnet,newx=test, type="class"),
+    ordinalForest=as.integer(predict(ordforres, newdata=ordfor_test,type="class")$ypred)
+  )
   
   accuracy.dt.list <- list()
   for(algo in names(predictions.list)){
@@ -131,7 +132,7 @@ error.values = final.accuracy.list$accuracies.error.percent
 model=final.accuracy.list$accuracies.algo.name
 ggplot()+
   geom_point(aes(
-    x = error.values,y=model)) + ggtitle("ordinalNetVsglmnetvsbaslines") 
+    x = error.values,y=model)) + ggtitle("ordinalNetVsordinalForest") 
 
 
 

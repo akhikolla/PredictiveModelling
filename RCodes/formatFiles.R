@@ -1,8 +1,67 @@
 library(tidyverse)
 library("readxl")
 library("xlsx")
-ncesdata <- read.csv("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/Copy of ncesdata_ECCDA30A 2.csv")
-head(ncesdata)
+ncesdata <- data.table::fread("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/Copy of ncesdata_ECCDA30A 2.csv",check.names=TRUE)
+
+coachingdata <- data.table::fread("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/Coaching logs Fall 2017- Spring 2021/Condensed columns-Table 1.csv",header = TRUE,check.names=TRUE )
+
+coachingdata <- read.csv("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/Coaching logs Fall 2017- Spring 2021/Condensed columns-Table 1.csv")
+required.coaching.cols <- coachingdata[,c(5,6,8,21,23,25,27,29,31,33,41,42,43,44,46)]
+
+required.coaching.cols$Duration.of.Event[required.coaching.cols$Duration.of.Event == ""] <- 0
+required.coaching.cols$Interaction.Type[required.coaching.cols$Interaction.Type == ""] <- "None"
+
+
+required.coaching.cols$Collaborative.teams[required.coaching.cols$Collaborative.teams == "Yes" |
+                                             required.coaching.cols$Collaborative.teams == "yes" ] <- 1
+
+required.coaching.cols$Collaborative.teams[required.coaching.cols$Collaborative.teams == "No" |
+                                             required.coaching.cols$Collaborative.teams == "" ] <- 0
+
+for(j in 5:ncol(required.coaching.cols)){
+  required.coaching.cols[,j][is.na(required.coaching.cols[,j])] <- 0
+  required.coaching.cols[,j][required.coaching.cols[,j] == "Yes" |
+                               required.coaching.cols[,j] == "yes"  ] <- 1 
+  required.coaching.cols[,j][required.coaching.cols[,j] == "No" |
+                               required.coaching.cols[,j] == ""] <- 0
+  
+}
+
+
+ndt <-ncesdata[required.coaching.cols,on=.(State.District.ID),nomatch = NULL]
+
+
+
+coachingdata[ncesdata, on = .(State.District.ID)]
+
+
+unique.values.percol.coaching <- list()
+for(i in 1:ncol(coachingdata)){
+  print(names(coachingdata)[i])
+  col.values <- coachingdata[i]
+  unique.col.values <- unique(col.values)
+  print(unique.col.values)
+  unique.values.percol.coaching[names(coachingdata)[i]] <- unique.col.values
+}
+
+
+nces_state_district_id <- ncesdata$State.District.ID
+length(nces_state_district_id)
+coaching_state_district_id <- coachingdata$State.District.ID
+length(coaching_state_district_id )
+
+unique.nces_state_district_id <- unique(ncesdata$State.District.ID)
+length(unique.nces_state_district_id)
+unique.coaching_state_district_id <- unique(coachingdata$State.District.ID)
+length(unique.coaching_state_district_id)
+
+
+nces
+outersect <- function(x, y) {
+  sort(c(setdiff(x, y),
+         setdiff(y, x)))
+}
+
 
 locale <- ncesdata$Locale.
 unique.locale <- unique(locale)
@@ -99,7 +158,7 @@ for(k in 1:ncol(required.nces.cols)){
 
 
 cwisdata <- read.csv("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/newcwis_survey data/cwis_survey data-Table 1.csv")
-required.cwis.cols <- cwisdata[-c(1,2,4,5,6,12,13,14,15)]
+required.cwis.cols <- cwisdata[-c(1,2,5,6,12,13,14,15)]
 
 required.cwis.cols$experience[is.na(required.cwis.cols$experience)] <- 0
 required.cwis.cols$member_grade_span_level[required.cwis.cols$member_grade_span_level == "TRUE" 
@@ -184,3 +243,5 @@ write.csv(required.cwis.cols,"/Users/akhilachowdarykolla/Documents/Coding/develo
 system.time(
   cwis.nces.coaching <- merge(required.cwis.cols, nces.coaching, by = "State.District.ID")
 )
+
+
