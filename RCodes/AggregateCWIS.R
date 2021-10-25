@@ -1,3 +1,4 @@
+library(data.table)
 
 cwisdata <- read.csv("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/newcwis_survey data/cwis_survey data-Table 1.csv")
 required.cwis.cols <- cwisdata[-c(1,2,5,6,8,12,13,14,15,21,22,23,24,25,26,27)]
@@ -47,32 +48,52 @@ cwis_mean_cols <- c("experience","member_grade_span_level","admin_receive_coachi
                     "collab_teams_modify_instruction_p3","collab_teams_reflecting_instruction_p4","collab_teams_review_learning_targets_p5","prof_learning_leader_manage_expectations","prof_learning_leader_teacher_observation","prof_learning_leader_committed_instruction","prof_learning_leader_collab_teams","prof_learning_self_dev_instructional_practices","prof_learning_self_receive_coaching","prof_learning_self_dev_monitor_student","prof_learning_self_receive_feedback","admin_clarified_purpose","admin_conv_gone_well","admin_conv_relevant_data","admin_add_suggestions","admin_provide_rationales","admin_provide_opportunity","admin_supported_suggestions","admin_guided_practice","admin_identify_next_steps","admin_paced_conversation","district_identified_strategies","district_deploy_central_office","district_deploy_principals","district_use_aligned_teams","district_using_technology","district_integrate_technology","district_utilize_virtual_learning","district_monitor_focused_improvement","collab_teams_analyze_during_meeting_historical","collab_teams_use_data_analysis_system_historical","employed_last_year","admin_expected_meet_during_covid","admin_collab_teams_reviews_data_now","admin_collab_teams_reviews_data_pre_covid","admin_collab_teams_positive_interaction_now","admin_collab_teams_positive_interaction_pre_covid","admin_collab_teams_effective_teaming_now","admin_collab_teams_effective_teaming_pre_covid","admin_collab_teams_analyze_during_meeting_now","admin_collab_teams_analyze_during_meeting_pre_covid","admin_collab_teams_use_data_analysis_system_now","admin_collab_teams_use_data_analysis_system_pre_covid","admin_prof_learning_self_dev_instructional_practices_now","admin_prof_learning_self_dev_instructional_practices_pre_covid","admin_prof_learning_self_receive_coaching_now","admin_prof_learning_self_receive_coaching_pre_covid","admin_prof_learning_self_dev_monitor_student_now","admin_prof_learning_self_dev_monitor_student_pre_covid","admin_prof_learning_self_receive_feedback_now","admin_prof_learning_self_receive_feedback_pre_covid","admin_common_practices_can_statements_now","admin_common_practices_can_statements_pre_covid","admin_common_practices_student_work_now","admin_common_practices_student_work_pre_covid","admin_common_practices_self_assessment_now","admin_common_practices_self_assessment_pre_covid","admin_common_practices_receive_feedback_now","admin_common_practices_receive_feedback_pre_covid","admin_common_practices_student_feedback_now","admin_common_practices_student_feedback_pre_covid","admin_common_practices_state_criteria_now","admin_common_practices_state_criteria_pre_covid",
 "admin_common_practices_student_review_cfa_now","admin_common_practices_student_review_cfa_pre_covid")
 
-dtnew <- dt[, lapply(.SD, as.character), by=ID]
-str(dtnew)
+# dtnew <- dt[, lapply(.SD, as.character), by=ID]
+# str(dtnew)
 
-tesit[, convert_to_numeric] <- tesit[, lapply(.SD, as.numeric), .SDcols = convert_to_numeric]
-tesit[, convert_to_numeric] <- tesit[, lapply(.SD, mean), .SDcols = convert_to_numeric]
-
+tesit[, cwis_mean_cols] <- tesit[, lapply(.SD, as.numeric), .SDcols = cwis_mean_cols]
+nt <-tesit[, lapply(.SD, mean), .SDcols = cwis_mean_cols,by = "State.District.ID"]
 
 cwis.dt[, cwis_mean_cols] <- cwis.dt[, lapply(.SD, as.numeric), .SDcols = cwis_mean_cols]
-cwis.dt[, cwis_mean_cols] <- cwis.dt[, lapply(.SD, mean), .SDcols = cwis_mean_cols]
-cwis.aggregate <- unique(cwis.dt, by = "State.District.ID")
+cwis.aggregate <- cwis.dt[, lapply(.SD, mean), .SDcols = cwis_mean_cols,by = "State.District.ID"]
+#cwis.aggregate <- unique(cwis.dt, by = "State.District.ID")
+cwis.aggregate.df <- as.data.frame(cwis.aggregate)
+#'data.frame':	230 obs. of  87 variables:
 
-write.csv(cwis.aggregate[-c(2,3,4)],"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/cwis_aggregate_districts.csv", row.names = FALSE)
+for(j in 2:ncol(cwis.aggregate.df)){
+  cwis.aggregate.df[,j][is.na(cwis.aggregate.df[,j])] <- 0
+  # required.cwis.cols[,j][required.cwis.cols[,j] == "TRUE"] <- 1 
+  # required.cwis.cols[,j][required.cwis.cols[,j] == "FALSE"] <- 0
+  
+}
 
-cwis.aggregate <- cwis.aggregate[-c(2,3,4)] 
+unique.values.percol.coaching <- list()
+for(i in 1:ncol(cwis.aggregate.df)){
+  print(names(cwis.aggregate.df)[i])
+  col.values <- cwis.aggregate.df[i]
+  unique.col.values <- unique(col.values)
+  print(unique.col.values)
+  unique.values.percol.coaching[names(cwis.aggregate.df)[i]] <- unique.col.values
+}
+
+
+write.csv(cwis.aggregate.df,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/correct_cwis_aggregate_districts.csv", row.names = FALSE)
+
+# cwis.aggregate <- cwis.aggregate[-c(2,3,4)] 
 
 
 # cwis.districts.aggregates <- tesit[, lapply(.SD, mean), by=State.District.ID]
-cwis.aggregates <- unique(tesit, by = "State.District.ID")
+# cwis.aggregates <- unique(tesit, by = "State.District.ID")
 
-
-nces.cwis.dt <-nces.dt[cwis.dt,on=.(State.School.ID ),nomatch = NULL]
+# 
+nces.dt <- as.data.table(nces.dt)
+nces.cwis.dt <-nces.dt[as.data.table(cwis.aggregate.df),on=.(State.School.ID),nomatch = NULL]
 #nces+cwis+coaching
-cwis.aggregrate.districts <- districts.aggregate.dt[cwis.aggregate,on=.(State.District.ID ),nomatch = NULL]
+
+
+cwis.aggregrate.districts <- districts.aggregate.dt[cwis.aggregate.df,on=.(State.District.ID ),nomatch = NULL]
+#Classes ‘data.table’ and 'data.frame':	186 obs. of  100 variables:
 write.csv(cwis.aggregrate.districts,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/coaching_cwis_aggregrate_districts.csv", row.names = FALSE)
-
-
 
 
 cwis.dt[, cwis_required_cols] <- cwis.dt[, lapply(.SD, as.numeric), .SDcols = cwis_required_cols]

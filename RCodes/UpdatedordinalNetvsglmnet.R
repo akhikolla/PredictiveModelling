@@ -61,6 +61,10 @@ folds.input.data <- as.data.table(folds.input.data)
 levels <- c("Very negative","Negative","Neutral","Positive","Very positive")
 folds.input.data$OrdinalETL <- factor(folds.input.data$OrdinalETL,levels)
 
+for(j in 1:127){
+  folds.input.data[,j][is.na(folds.input.data[,j])] <- 0
+}
+
 
 final.accuracy.list <- list()
 accuracy.dt <- list()
@@ -72,20 +76,32 @@ for(i in 1:split){
   test.fold = i
   datatrain <-folds.input.data[fold != test.fold] #69637 obs. of  129 variables:
   datatest <- folds.input.data[fold == test.fold]
-  ord_y_train <- datatrain[,128]
+  ord_y_train <- datatrain$OrdinalETL
 
-  y_train <- datatrain[,39]
+  y_train <- as.matrix(datatrain[,39])
   
   ord_y_test <- datatest[,128]
   y_test <- datatest[,39]
   
   train <- as.matrix(datatrain[,-c(39,128,129)])
   test <-  as.matrix(datatest[,-c(39,128,129)])
+  #ordinalNet
+# for(k in 1:127){
+#   print("At k itr")
+#   print(k)
+#   ordnet <- ordinalNetTune(head(train,k),head(ord_y_train,k))
+#   print("==================")
+# }
   
-  ordnet <- ordinalNet(head(train),ord_y_train, family="cumulative", link="logit",
-                       parallelTerms=TRUE, nonparallelTerms=FALSE)
+  ordnet <- ordinalNetTune(train,ord_y_train)
+  #, family="cumulative", link="logit",
+                    #   parallelTerms=TRUE, nonparallelTerms=FALSE)
+  # ordinalNetTune(train,ord_y_train, family="cumulative", link="logit",parallelTerms=TRUE, nonparallelTerms=FALSE)
+  # ordinalNetTune
+  # 
   
-  cv.fit.gaussian <- cv.glmnet(train,y_train)
+  bestLambdaIndex <- which.max(rowMeans(ordnet$loglik))
+    cv.fit.gaussian <- cv.glmnet(train,y_train)
   
   one.pred <- function(x)rep(x, nrow(test))
   as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
@@ -99,7 +115,7 @@ for(i in 1:split){
     baseline.l0=one.pred(as.numeric.factor(freq[which.max(freq$Freq),]$y_train)),
     baseline.l1=one.pred(median.ind.val),
     baseline.l2=one.pred(mean.ind.val),
-    ordnet.pred = predict(ordnet,newx=test, type="class"))
+    ordnet.pred = predict(ordnet$fit,newx=test, type="class",whichLambda=bestLambdaIndex))
   
   accuracy.dt.list <- list()
   for(algo in names(predictions.list)){
@@ -123,3 +139,20 @@ ggplot()+
 
 
 
+for(l in 1:1080){
+  value <- (17 * l) %% 1080
+  if(value == 1){
+    print(l)
+  }
+}
+# 
+# rest_list <- list()
+#  
+# for(l in 1:10){
+#   restaurant <- paste0("R", "_",l)
+#   for(o in 1: 30)
+#   order <- paste0("order","_",o)
+#   if(value == 1){
+#     print(l)
+#   }
+# }

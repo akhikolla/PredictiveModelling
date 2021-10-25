@@ -255,7 +255,7 @@ for(tm in 1:nrow(required.coaching.cols)){
     required.coaching.cols$Duration.of.Event[tm] <- paste0(required.coaching.cols$Duration.of.Event[tm])
   }
 }
-
+  
 
 
 

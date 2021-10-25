@@ -28,9 +28,6 @@ head(required.timeframe.cols)
 required.date.id <- as.data.table(coachingdatecheck[,c(4,8)])
 
 
-required.date.id %>% group_by(State.District.ID)
-
-
 
 library(data.table)
 nt <-dcast(setDT(required.date.id), rowid(State.District.ID) ~ State.District.ID, value.var = "Date.of.Event.Visit")[, State.District.ID := NULL][]
@@ -70,4 +67,16 @@ oo <- xts(required.date.id[-1], required.date.id[[1]])
 
 ts_plot(oo,
         type = "multiple")
+
+randomData <- rnorm(100)
+
+months.ts <- ts(randomData,start=2015,end=2020, frequency = 4)
+
+plot(months.ts)
+
+lines(months.ts,col=2)
+
+
+
+
 
