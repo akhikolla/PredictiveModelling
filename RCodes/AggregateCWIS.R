@@ -31,6 +31,16 @@ for(j in 12:ncol(required.cwis.cols)){
   
 }
 
+required.cwis.cols$created_at [is.na(required.cwis.cols$created_at)] <- "2017"
+required.cwis.cols$created_at [required.cwis.cols$created_at == ""] <- "2017"
+required.cwis.cols$created_at <- gsub("-.*","",required.cwis.cols$created_at)
+unique(required.cwis.cols$created_at)
+
+required.cwis.cols$updated_at [is.na(required.cwis.cols$updated_at)] <- "2017"
+required.cwis.cols$updated_at [required.cwis.cols$updated_at == ""] <- "2017"
+required.cwis.cols$updated_at <- gsub("-.*","",required.cwis.cols$updated_at)
+unique(required.cwis.cols$updated_at)
+
 cwis.dt <- as.data.table(required.cwis.cols)
 tesit <-cwis.dt 
 nts <- cwis.dt
@@ -55,10 +65,26 @@ tesit[, cwis_mean_cols] <- tesit[, lapply(.SD, as.numeric), .SDcols = cwis_mean_
 nt <-tesit[, lapply(.SD, mean), .SDcols = cwis_mean_cols,by = "State.District.ID"]
 
 cwis.dt[, cwis_mean_cols] <- cwis.dt[, lapply(.SD, as.numeric), .SDcols = cwis_mean_cols]
-cwis.aggregate <- cwis.dt[, lapply(.SD, mean), .SDcols = cwis_mean_cols,by = "State.District.ID"]
+cwis.aggregate <- cwis.dt[, lapply(.SD, mean), .SDcols = cwis_mean_cols,by = c("State.District.ID","created_at")]
 #cwis.aggregate <- unique(cwis.dt, by = "State.District.ID")
+##Previously
 cwis.aggregate.df <- as.data.frame(cwis.aggregate)
 #'data.frame':	230 obs. of  87 variables:
+#'Current
+
+write.csv(cwis.aggregate.df,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/correct_cwis_aggregate_districts.csv", row.names = FALSE)
+
+
+
+#updated
+cwis.aggregate.peryear<- as.data.table(cwis.aggregate)
+#str(cwis.aggregate.updated)
+#592 obs. of  88 variables:
+
+write.csv(cwis.aggregate.peryear,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/cwis_aggregate_peryear.csv", row.names = FALSE)
+
+
+
 
 for(j in 2:ncol(cwis.aggregate.df)){
   cwis.aggregate.df[,j][is.na(cwis.aggregate.df[,j])] <- 0

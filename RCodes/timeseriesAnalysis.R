@@ -257,25 +257,13 @@ srequired.MO_001090_jd <- ggplot(srequired.MO_001090, aes(Date.of.Event.Visit, D
 srequired.MO_001090_jd + facet_grid(. ~ Date.of.Event.Visit)
 
 #working 
-dt <- head(required.timeframe.cols,10)
+dt <- head(required.timeframe.cols,250)
 
 ggplot(data=dt, aes(x=Date.of.Event.Visit,y=Duration.of.Event,color=State.District.ID))+ 
   geom_point() + 
-  facet_wrap(~State.District.ID,nrow=10,ncol= 1,scales="free_x")
+  facet_wrap(~State.District.ID,nrow=4,ncol= 4,scales="free_x")
   
-# ggrange
 
-
-required.timeframe.cols <- 
-  mutate(required.timeframe.cols, align = stringr::str_replace(align, "Characters", ""))
-
-ggplot(data = marvel_count, aes(year, n)) +
-  geom_line(color = "steelblue", size = 1) +
-  geom_point(color = "steelblue") + 
-  labs(title = "New Marvel characters by alignment & gender",
-       subtitle = "(margins= TRUE)",
-       y = "Count of new characters", x = "") + 
-  facet_grid(align ~ gender, margins=TRUE) 
 
 
 
