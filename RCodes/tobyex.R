@@ -1,35 +1,32 @@
-weight.dt.list <- list()
-for(seed in 1:10){
-  set.seed(seed)
-  n = 1000
-  p = 100
-  nzc = trunc(p/10)
-  x = matrix(rnorm(n * p), n, p)
-  beta = rnorm(nzc)
-  fx = x[, seq(nzc)] %*% beta
-  eps = rnorm(n) * 5
-  y = drop(fx + eps)
-  px = exp(fx)
-  px = px/(1 + px)
-  ly = rbinom(n = length(px), prob = px, size = 1)
-  set.seed(1011)
-  cvob1 = cv.glmnet(x, y)
-  weight.dt.list[[seed]] <- data.table(
-    seed,
-    var.names=rownames(coef(cvob1))[-1],
-    weights=coef(cvob1)[-1])
+
+gg <- ggplot()+
+  ggtitle("check if train AUM decreases")+
+  theme_bw()+
+  theme(panel.spacing=grid::unit(0, "lines"))+
+  geom_line(aes(
+    Date.of.Event.Visit, Duration.of.Event,
+    group=paste(State.District.ID,gsub("-.*","",Date.of.Event.Visit) )),
+    data=required.timeframe.cols)+
+  facet_grid(State.District.ID + gsub("-.*","",Date.of.Event.Visit) ~ ., scales="free", labeller=label_both)
+png(
+  "figure-linear-model-test-aum-train-decreases.png",
+  width=4, height=35, res=100, units="in")
+print(gg)
+dev.off()
+
+
+par(mar = c(2,2,2,2))
+par(mfrow=c(4,3))
+
+for(i in 1:nrow(required.timeframe.cols)){
+  plot(required.timeframe.cols$Date.of.Event.Visit, required.timeframe.cols$Duration.of.Event)
 }
-weightz.dt <- do.call(rbind, weight.dt.list)
 
-ggplot()+
-  geom_point(aes(
-    weights, var.names),
-    data=weight.dt)
 
-weightz.dt[, n.nonzero := sum(weights != 0), by=var.names]
 
-ggplot()+
-  facet_grid(n.nonzero ~ ., scales="free", space="free")+
-  geom_point(aes(
-    weights, var.names),
-    data=weight.dt)
+
+
+
+
+
+

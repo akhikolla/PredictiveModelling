@@ -4,11 +4,12 @@ library(ggplot2)
 library(tidyverse)
 library(caret)
 library("ordinalNet")
-
+library("ordinalForest")
 library(tidyverse)
 library(caret)
 library("datarium")
 library(ggplot2)
+library("Metrics")
 
 # input.data<- data.table::fread("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/coaching_nces_aggregrate_districts.csv")
 # head(input.data)
@@ -52,18 +53,20 @@ folds.input.data <- folds.input.data[,-c(92)]
 
 head(folds.input.data)
 
-#folds.input.data <- as.data.frame(folds.input.data)
-for(k in 1:128){
+folds.input.data <- as.data.frame(folds.input.data)
+for(k in 1:127){
   folds.input.data[,k] <- as.numeric(folds.input.data[,k])
+}
+
+for(j in 1:127){
+  folds.input.data[,j][is.na(folds.input.data[,j])] <- 0
 }
 folds.input.data <- as.data.table(folds.input.data)
 # folds.input.data<- lapply(folds.input.data,as.numeric)
 levels <- c("Very negative","Negative","Neutral","Positive","Very positive")
 folds.input.data$OrdinalETL <- factor(folds.input.data$OrdinalETL,levels)
 
-for(j in 1:127){
-  folds.input.data[,j][is.na(folds.input.data[,j])] <- 0
-}
+head(folds.input.data)
 
 
 final.accuracy.list <- list()
@@ -85,24 +88,17 @@ for(i in 1:split){
   
   train <- as.matrix(datatrain[,-c(39,128,129)])
   test <-  as.matrix(datatest[,-c(39,128,129)])
-  #ordinalNet
-# for(k in 1:127){
-#   print("At k itr")
-#   print(k)
-#   ordnet <- ordinalNetTune(head(train,k),head(ord_y_train,k))
-#   print("==================")
-# }
   
-  ordnet <- ordinalNetTune(train,ord_y_train)
-  #, family="cumulative", link="logit",
-                    #   parallelTerms=TRUE, nonparallelTerms=FALSE)
-  # ordinalNetTune(train,ord_y_train, family="cumulative", link="logit",parallelTerms=TRUE, nonparallelTerms=FALSE)
-  # ordinalNetTune
-  # 
-  
+  ordfor_train <- head(datatrain[,-c(39,128)],20)
+  ordfor_test <- datatest[,-c(39,128,129)]
+
+  ordnet <- ordinalNetTune(head(train),head(ord_y_train))
   bestLambdaIndex <- which.max(rowMeans(ordnet$loglik))
     cv.fit.gaussian <- cv.glmnet(train,y_train)
-  
+    
+    ordforres <- ordfor(depvar="OrdinalETL", data=ordfor_train, nsets=1000, ntreeperdiv=100,
+                        ntreefinal=5000, perffunction = "probability")
+    
   one.pred <- function(x)rep(x, nrow(test))
   as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
   freq <-as.data.frame(table(y_train))
@@ -115,15 +111,18 @@ for(i in 1:split){
     baseline.l0=one.pred(as.numeric.factor(freq[which.max(freq$Freq),]$y_train)),
     baseline.l1=one.pred(median.ind.val),
     baseline.l2=one.pred(mean.ind.val),
-    ordnet.pred = predict(ordnet$fit,newx=test, type="class",whichLambda=bestLambdaIndex))
+    ordnet.pred = predict(ordnet$fit,newx=head(test), type="class",whichLambda=bestLambdaIndex),
+    ordinalForest=as.integer(predict(ordforres, newdata=head(ordfor_test,20),type="class")$ypred))
   
   accuracy.dt.list <- list()
   for(algo in names(predictions.list)){
     print(algo)
     pred.vec = predictions.list[[algo]]
+    print(class(pred.vec))
     accuracy.dt.list[[algo]] <- data.table(
       algo.name = algo,
-      error.percent= sqrt(mean((pred.vec - y_test)^2))#l2 error
+     meanabs.error.percent= mean(abs(head(pred.vec) - head(y_test$ETL.AVERAGE))),
+     rmse.error.percent = sqrt(mean((head(pred.vec) - head(y_test$ETL.AVERAGE))^2))#l2 error
     )
   }
   
@@ -131,7 +130,7 @@ for(i in 1:split){
 }
 final.accuracy.list <- do.call(rbind, accuracy.dt) 
 final.accuracy.list
-error.values = final.accuracy.list$accuracies.error.percent
+error.values = final.accuracy.list$accuracies.meanabs.error.percent#final.accuracy.list$accuracies.error.percent
 model=final.accuracy.list$accuracies.algo.name
 ggplot()+
   geom_point(aes(
@@ -145,6 +144,22 @@ for(l in 1:1080){
     print(l)
   }
 }
+
+
+#ordinalNet
+# for(k in 1:127){
+#   print("At k itr")
+#   print(k)
+#   ordnet <- ordinalNetTune(head(train,k),head(ord_y_train,k))
+#   print("==================")
+# }
+
+
+#, family="cumulative", link="logit",
+#   parallelTerms=TRUE, nonparallelTerms=FALSE)
+# ordinalNetTune(train,ord_y_train, family="cumulative", link="logit",parallelTerms=TRUE, nonparallelTerms=FALSE)
+# ordinalNetTune
+# 
 # 
 # rest_list <- list()
 #  

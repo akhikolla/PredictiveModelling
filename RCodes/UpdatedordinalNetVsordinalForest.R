@@ -66,6 +66,28 @@ input.cols <- c("Collaborativeteams","Commonformativeassessment","Databaseddecis
 levels <- c("Very negative","Negative","Neutral","Positive","Very positive")
 
 
+folds.input.data<- data.table::fread("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/factored_folds_input_data.csv")
+head(folds.input.data)
+
+folds.input.data <- folds.input.data[,-c(92)]
+
+head(folds.input.data)
+
+#folds.input.data <- as.data.frame(folds.input.data)
+for(k in 1:127){
+  folds.input.data[,k] <- as.numeric(folds.input.data[,k])
+}
+folds.input.data <- as.data.table(folds.input.data)
+# folds.input.data<- lapply(folds.input.data,as.numeric)
+levels <- c("Very negative","Negative","Neutral","Positive","Very positive")
+folds.input.data$OrdinalETL <- factor(folds.input.data$OrdinalETL,levels)
+
+for(j in 1:127){
+  folds.input.data[,j][is.na(folds.input.data[,j])] <- 0
+}
+
+
+
 final.accuracy.list <- list()
 accuracy.dt <- list()
 predictions.list <- list()
