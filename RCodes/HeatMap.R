@@ -15,47 +15,24 @@ for(i in 1:nrow(forcheck)){
   }
   summary.dt$durationrange[i] <- val 
 }
-data <- data[ !(menuitem == 'coffee' | amount <= 0),] 
 
 summary.dt <- summary.dt[!(summary.dt$period == "Mar1-July1")]
 summary.dt <- summary.dt[!(summary.dt$period == "Aug207-Feb208")]
 
 summary.dt$month <- ""
+
+months <- c("Jan","Feb","Mar",
+            "Apr","May","Jun",
+            "Jul","Aug","Sep",
+            "Oct","Nov","Dec")
 for(i in 1:nrow(summary.dt)){
   date <-summary.dt$Date.of.Event.Visit[i]
   Month <- as.numeric(sapply(strsplit(as.character(date),'/'), "[", 1))
-  if(Month == 1){
-    val <- "Jan"
-  }else if(Month == 2){
-    val <- "Feb"
-  }else if(Month == 3){
-    val <- "Mar"
-  }else if(Month == 4){
-    val <- "Apr"
-  }else if(Month == 5){
-    val <-"May"
-  }else if(Month == 6){
-    val <- "Jun"
-  }else if(Month == 7){
-    val <- "Jul"
-  }else if(Month == 8){
-    val <- "Aug"
-  }else if(Month == 9){
-    val <- "Sept"
-  }else if(Month == 10){
-    val <- "Oct"
-  }else if(Month == 11){
-    val <- "Nov"
-  }else if(Month == 12){
-    val <- "Dec"
-  }else{
-    val <- "None"
-  }
-  summary.dt$month[i] <- val 
+  summary.dt$month[i] <- months[Month]
 }
 
-
-summary.dt <- kt.dt#kt.dt[,(noofcoachings=.N), by= c("State.District.ID")]
+# summary.dt <- kt.dt
+#kt.dt[,(noofcoachings=.N), by= c("State.District.ID")]
 
 
 
@@ -111,6 +88,10 @@ colnames(heat.data) <-c("Aug17-Feb18"  ,"Mar18-July18" ,
                     "Aug18-Feb19", "Mar19-July19" , "Aug19-Feb20" , "Mar20-July20" ,
                     "Aug20-Feb21","Mar21-July21" , "Aug21-Feb22")
 
+periods <- c("Aug17-Feb18"  ,"Mar18-July18" ,
+             "Aug18-Feb19", "Mar19-July19" , "Aug19-Feb20" , "Mar20-July20" ,
+             "Aug20-Feb21","Mar21-July21" , "Aug21-Feb22")
+
 message(sprintf("unique districts found : %s\n",paste(unique(kt.dt$period), collapse=", ")))
 
 # message(sprintf("unique districts found : %s\n",paste(unique(ordered.district.count.tracker$State.District.ID), collapse=", ")))
@@ -119,6 +100,60 @@ for(itr in 1:nrow(summary.dt)){
   row.value <- summary.dt[itr,]
   heat.data[row.value$State.District.ID,row.value$period] <- heat.data[row.value$State.District.ID,row.value$period] + 1
 }
+
+for(itr in 1:nrow(heat.data)){
+  heat.data[row.value$State.District.ID,row.value$period] <- log(heat.data[row.value$State.District.ID,row.value$period])
+}
+
+write.csv(heat.data,"/Users/akhilachowdarykolla/Desktop/nooutliersdata.csv", row.names = FALSE)
+
+
+
+
+
+heat.data.count <- list()
+ord.count.tracker <- ordered.district.count.tracker$State.District.ID
+for(heat in 1:length(ord.count.tracker)){
+  row.value <- summary.dt[summary.dt$State.District.ID == ord.count.tracker[heat],]
+  count = 0
+  for(per in 1:length(periods)){
+    if(nrow(row.value[row.value$period == periods[per],]) > 0){
+      count = count + 1
+    }
+  }
+  heat.data.count <- c(heat.data.count,count)
+}
+
+count.heat.data <- cbind(heat.data,heat.data.count )  
+count.heat.data[order(count.heat.data$heat.data.count),]
+chd <- count.heat.data[order(count.heat.data[10,],decreasing=FALSE),]
+count.heat.data[order(count.heat.data[,"heat.data.count"], decreasing = TRUE),]
+heat.mon.data <- matrix(0,nrow = 190, ncol = 12)   
+rownames(heat.mon.data) <-ordered.district.count.tracker$State.District.ID
+
+colnames(heat.mon.data) <- c("Jan","Feb","Mar",
+                                  "Apr","May","Jun",
+                                  "Jul","Aug","Sep",
+                                  "Oct","Nov","Dec")
+
+# message(sprintf("unique districts found : %s\n",paste(unique(kt.dt$period), collapse=", ")))
+
+# message(sprintf("unique districts found : %s\n",paste(unique(ordered.district.count.tracker$State.District.ID), collapse=", ")))
+
+for(mon in 1:nrow(summary.dt)){
+  row.value <- summary.dt[mon,]
+  heat.mon.data[row.value$State.District.ID,row.value$month] <- heat.mon.data[row.value$State.District.ID,row.value$month] + 1
+}
+
+
+for(i in 1:nrow(summary.dt)){
+  date <-required.timeframe.cols$Date.of.Event.Visit[i]
+  print(date)
+  Month <- as.numeric(sapply(strsplit(as.character(date),'/'), "[", 1))
+  Year <- as.numeric(sapply(strsplit(as.character(date),'/'), "[", 3))
+  
+}
+
 
 
 png(filename="~/Desktop/figure_heatmap2.png",5000,10000)

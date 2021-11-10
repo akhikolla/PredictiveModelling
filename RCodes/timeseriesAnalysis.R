@@ -1,6 +1,10 @@
 library("lubridate") 
 library("ggplot2")
 library("data.table")
+
+library(lubridate)
+library(dplyr)
+
 coachingdatecheck <- read.csv("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/Coaching logs Fall 2017- Spring 2021/Condensed columns-Table 1.csv")#,header = TRUE,check.names=TRUE,format = "%m/%d/%Y"  )
 required.timeframe.cols <- coachingdatecheck[,c(4,5,8)]
 head(required.timeframe.cols)
@@ -228,11 +232,7 @@ required.timeframe.cols$Duration.of.Event
 head(required.timeframe.cols$Duration.of.Event)
 head(required.timeframe.cols)
 
-# 
-# my_time_sum <- seconds_to_period(required.timeframe.cols$Duration.of.Event)
-# 
-# my_time_seconds <- period_to_seconds(my_time_hms)      # Convert to seconds
-# my_time_seconds   
+
 
 required.timeframe.cols$Date.of.Event.Visit <- as.Date(required.timeframe.cols$Date.of.Event.Visit, "%m/%d/%y")
 plot(required.timeframe.cols$State.District.ID~rdate,type="l",col = "red",axes=F)
@@ -257,13 +257,82 @@ srequired.MO_001090_jd <- ggplot(srequired.MO_001090, aes(Date.of.Event.Visit, D
 srequired.MO_001090_jd + facet_grid(. ~ Date.of.Event.Visit)
 
 #working 
-dt <- head(required.timeframe.cols,250)
+dt <- head(required.timeframe.cols,10)
 
-ggplot(data=dt, aes(x=Date.of.Event.Visit,y=Duration.of.Event,color=State.District.ID))+ 
+srequired.MO_001090<- required.MO_001090[order(rank(Duration.of.Event),Date.of.Event.Visit)]
+# srequired.timeframe.cols<- required.timeframe.cols[order(rank(Date.of.Event.Visit), Duration.of.Event)]
+
+required.MO_001090%>%arrange(mdy(required.MO_001090$Duration.of.Event))
+
+srequired.MO_001090$State.District.ID <- "MO_001090"
+srequired.MO_001090<- required.MO_001090[order(rank(Date.of.Event.Visit), Duration.of.Event)]
+srequired.MO_001090$Duration.of.Event[srequired.MO_001090$Duration.of.Event == "00:60:00"] <- 1
+srequired.MO_001090$Duration.of.Event <- gsub(":",".",gsub(":[^:]+$","",srequired.MO_001090$Duration.of.Event)) 
+srequired.MO_001090$Duration.of.Event <- gsub("00","0",srequired.MO_001090$Duration.of.Event)
+srequired.MO_001090$Duration.of.Event <- as.numeric(srequired.MO_001090$Duration.of.Event)
+
+srequired.MO_001090$period <- ""
+for(i in 1:nrow(srequired.MO_001090)){
+  date <-srequired.MO_001090$Date.of.Event.Visit[i]
+  print(date)
+  Month <- as.numeric(sapply(strsplit(as.character(date),'/'), "[", 1))
+  Year <- as.numeric(sapply(strsplit(as.character(date),'/'), "[", 3))
+  if(Month < 3){
+    val <- paste0("Aug", Year-1 , "-" , "Feb", Year)
+  }else if(Month > 3 & Month < 8){
+    val <- paste0("Mar", Year , "-" , "July" , Year)
+    print(val)
+  }else{
+    val <- paste0("Aug", Year , "-" , "Feb" , Year+1)
+  }
+  srequired.MO_001090$period[i] <- val 
+}
+
+srequired.MO_001090 <- srequired.MO_001090[order(rank(period, Duration.of.Event))]
+gg.district.compare <- ggplot(data=srequired.MO_001090, aes(x=factor(period),y=Duration.of.Event))+ 
   geom_point() + 
-  facet_wrap(~State.District.ID,nrow=4,ncol= 4,scales="free_x")
-  
+  facet_wrap(~State.District.ID,nrow=95,ncol=2 ,scales="free_x") + geom_hline(yintercept=4.0,linetype="dashed", color = "red") +
+  geom_hline(yintercept=8.0,linetype="dashed", color = "blue")
 
+gg.district.compare + theme(axis.text.x = element_text(face="bold", color="#993333", 
+                                     size=10, angle=45),
+          axis.text.y = element_text(face="bold", color="#993333", 
+                                     size=10, angle=45))
+
+
+# p + scale_x_continuous(name = "Speed of cars", limits = sort(as.numeric(srequired.MO_001090$Duration.of.Event)) +
+#   scale_y_continuous(name = "Stopping distance", limits = c(0, 150))
+
+sort(as.numeric(srequired.MO_001090$Duration.of.Event))
+
+
+
+gg.district.compare <- ggplot(data=dt, aes(x=Date.of.Event.Visit,y=Duration.of.Event))+ 
+  geom_point() + 
+  facet_wrap(~State.District.ID,nrow=95,ncol=2 ,scales="free_x") + geom_hline(yintercept=04:00:00,linetype="dashed", color = "red")
+  
+sp + geom_hline(yintercept=20)
+
+
+png(filename="~/Desktop/figure-district-timeseries.png",2000,5000)
+print(gg.district.compare)
+dev.off()
+
+
+
+required.MO_001090 %>% arrange(desc(hm(required.MO_001090$Duration.of.Event)))
+
+my_time_hms <- period_to_seconds(required.MO_001090$Duration.of.Event)  
+my_time_sum <- seconds_to_period(required.MO_001090$Duration.of.Event)
+# 
+# my_time_seconds <- period_to_seconds(my_time_hms)      # Convert to seconds
+# my_time_seconds   
+
+my_time <- c("10:05:45", "07:35:51", "17:12:12",       # Create example times
+             "13:18:45", "10:53:54", "06:14:25")
+my_time 
+my_time_hms <- hms(my_time)                            # Convert time to Period object
+my_time_hms         
 
 
 

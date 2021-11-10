@@ -1,137 +1,168 @@
-library(ggplot2)
-library(data.table)
 
-library(readr)
-library(keras)
+ggk<-ggplot(summary.dt, aes(x = period, y = State.District.ID , fill = Duration.of.Event)) +
+  geom_tile(color = "black") +
+  geom_text(aes(label = Duration.of.Event), color = "white", size = 3) +  coord_fixed()
+#annotate("text",label="Duration.of.Event", color = "white", size = 0.5)+
 
-devtools::install_github("rstudio/tensorflow")
-devtools::install_github("rstudio/keras")
+melt(heat.data)
+some.coaching <- data.table(
+  State.District.ID=rownames(heat.data)[as.integer(row(heat.data))],
+  period=colnames(heat.data)[as.integer(col(heat.data))],
+  n.coaching.sessions=as.integer(heat.data)
+)[n.coaching.sessions > 0]
+ggk<-ggplot(some.coaching, aes(x = period, y = State.District.ID , fill = n.coaching.sessions)) +
+  geom_tile(color = "black") +
+  geom_text(aes(label = n.coaching.sessions),  size = 3) +  coord_fixed() +
+  scale_fill_gradient(low="grey90", high="red")+
+  theme_bw()
+#annotate("text",label="Duration.of.Event", color = "white", size = 0.5)+
 
-
-
-library(devtools)
-install.packages("keras")
-#devtools::install_github("rstudio/keras")
-library(keras)        
-install_keras()  
-fashion_mnist <- keras::dataset_fashion_mnist()
-
-
-
-
-install.packages("keras")
-library(keras)
-install_keras(tensorflow="1.4")
-imdb<-dataset_imdb(num_words = 10000)
-
-if(file.exists("figure-fashion-mnist-data.rds")){
-  data.list <- readRDS("figure-fashion-mnist-data.rds")
-}else{
-  data.list <- list(
-    fashion=keras::dataset_fashion_mnist(),
-    digits=keras::dataset_mnist())
-  saveRDS(data.list, "figure-fashion-mnist-data.rds")
-}
-
-obs.per.label <- 7
-breaks.vec <- c(10, 20, 28)
-for(data.name in names(data.list)){
-  test.list <- data.list[[data.name]][["test"]]
-  y <- test.list[["y"]]
-  some.intensity.dt.list <- list()
-  design.row <- 0
-  for(label in unique(y)){
-    obs.i.vec <- which(y == label)[1:obs.per.label]
-    for(observation in seq_along(obs.i.vec)){
-      obs.i <- obs.i.vec[[observation]]
-      intensity.mat <- test.list[["x"]][obs.i,,]
-      colnames(intensity.mat) <- rownames(intensity.mat) <- 1:nrow(intensity.mat)
-      design.row <- design.row+1
-      some.intensity.dt.list[[paste(label, observation)]] <- data.table(
-        label, observation,
-        design.row,
-        design.col=1:length(intensity.mat),
-        row=as.integer(row(intensity.mat)),
-        col=as.integer(col(intensity.mat)),
-        intensity=as.numeric(intensity.mat))
-    }
-  }
-  some.intensity.dt <- do.call(rbind, some.intensity.dt.list)
-  some.intensity.dt[, ex := observation]
-  gg <- ggplot()+
-    theme(
-      panel.border=element_rect(fill=NA, color="white", size=0.5),
-      panel.spacing=grid::unit(0, "lines"))+
-    facet_grid(ex ~ label, labeller=label_both)+
-    coord_equal(expand=FALSE)+
-    geom_tile(aes(
-      col, row, fill=intensity),
-      data=some.intensity.dt)+
-    scale_fill_gradient(low="black", high="white")+
-    scale_y_reverse("Pixel row index", breaks=breaks.vec)+
-    scale_x_continuous("Pixel column index", breaks=breaks.vec)
-  png(paste0("figure-fashion-mnist-", data.name, ".png"),
-      width=7, height=4.5, res=100, units="in")
-  print(gg)
-  dev.off()
-  gg <- ggplot()+
-    theme(
-      panel.border=element_rect(fill=NA, color="white", size=0.5),
-      panel.spacing=grid::unit(0, "lines"))+
-    coord_cartesian(expand=FALSE)+
-    geom_tile(aes(
-      design.col, design.row, fill=intensity),
-      data=some.intensity.dt)+
-    scale_fill_gradient(low="black", high="white")+
-    scale_y_reverse("Example/row")+
-    scale_x_continuous(
-      "Pixel/feature/column", breaks=c(1, seq(100, 700, by=100), nrow(last.image.dt)))
-  gg <- ggplot()+
-    facet_grid(label ~ .)+
-    theme(
-      panel.border=element_rect(fill=NA, color="white", size=0.5),
-      panel.spacing=grid::unit(0, "lines"))+
-    coord_cartesian(expand=FALSE)+
-    geom_tile(aes(
-      design.col, observation, fill=intensity),
-      data=some.intensity.dt)+
-    scale_fill_gradient(low="black", high="white")+
-    scale_y_reverse("Example/row")+
-    scale_x_continuous(
-      "Pixel/feature/column", breaks=c(1, seq(100, 700, by=100), nrow(last.image.dt)))
-  png(paste0("figure-fashion-mnist-", data.name, "-design.png"),
-      width=7, height=2, res=100, units="in")
-  print(gg)
-  dev.off()
-}
-
-one.breaks <- c(1, breaks.vec)
-last.image.dt <- some.intensity.dt.list[[length(some.intensity.dt.list)]]
-gg <- ggplot()+
-  theme(
-    panel.border=element_rect(fill=NA, color="white", size=0.5),
-    panel.spacing=grid::unit(0, "lines"))+
-  coord_equal(expand=FALSE)+
-  geom_tile(aes(
-    col, row, fill=intensity),
-    data=last.image.dt)+
-  scale_fill_gradient(low="black", high="white")+
-  scale_y_reverse("Pixel row index", breaks=one.breaks)+
-  scale_x_continuous("Pixel column index", breaks=one.breaks)
-png("figure-fashion-mnist-one-example.png",
-    width=3, height=2.3, res=100, units="in")
-print(gg)
+  
+png(filename="~/Desktop/test-9-11-21-heatmap.png",1000,10000)
+print(ggk)
 dev.off()
 
-gg <- ggplot()+
+
+america_heatmap <- heatmap(head(summary.dt), Rowv=NA, 
+                           Colv=NA, col = brewer.pal(9, "Blues"), scale="column", 
+                           margins=c(2,6))
+
+
+
+
+geom_text(aes(label = Duration.of.Event), color = "white", size = 3) +
+  annotate("text",label="Duration.of.Event", color = "white", size = 2)
+
+
+p <- ggplot(summary.dt,aes(x=period,y=State.District.ID,fill=Duration.of.Event))+
+  geom_tile()
+
+
+base_size <- 9
+p + theme_grey(base_size = base_size) + labs(x = "", y = "") + scale_x_discrete(expand = c(0, 0)) 
++scale_y_discrete(expand = c(0, 0)) + opts(legend.position = "none",axis.ticks = theme_blank(),
+axis.text.x = theme_text(size = base_size * 0.8, angle = 330, hjust = 0, colour = "grey50"))
+
+library(gplots) # heatmap.2() function
+library(plotrix) # gradient.rect() function
+
+# convert from long format to wide format
+m5 <- m3 %>% spread(key="state",value=count)
+m6 <- as.matrix(m5[,-1])
+rownames(m6) <- m5$year
+
+# base heatmap
+png(filename="measles-base.png",height=5.5,width=8.8,res=200,units="in")
+heatmap(t(m6),Rowv=NA,Colv=NA,na.rm=T,scale="none",col=terrain.colors(100),
+        xlab="",ylab="",main="Incidence of Measles in the US")
+dev.off()
+
+# gplots heatmap.2
+png(filename="measles-gplot.png",height=6,width=9,res=200,units="in")
+par(mar=c(2,3,3,2))
+gplots::heatmap.2(summary.dt,na.rm=T,dendrogram="none",Rowv=NULL,Colv="Rowv",trace="none",scale="none",offsetRow=0.3,offsetCol=0.3,
+                  breaks=c(-1,0,1,10,100,500,1000,max(m4$count,na.rm=T)),colsep=which(seq(1928,2003)%%10==0),
+                  margin=c(3,8),col=rev(c("#d53e4f","#f46d43","#fdae61","#fee08b","#e6f598","#abdda4","#ddf1da")),
+                  xlab="",ylab="",key=F,lhei=c(0.1,0.9),lwid=c(0.2,0.8))
+gradient.rect(0.125,0.25,0.135,0.75,nslices=7,border=F,gradient="y",col=rev(c("#d53e4f","#f46d43","#fdae61","#fee08b","#e6f598","#abdda4","#ddf1da")))
+text(x=rep(0.118,7),y=seq(0.28,0.72,by=0.07),adj=1,cex=0.8,labels=c("Aug17-Feb18"  ,"Mar18-July18" ,"Aug18-Feb19", "Mar19-July19" ,"Aug19-Feb20" , "Mar20-July20" ,"Aug20-Feb21","Mar21-July21" , "Aug21-Feb22"))
+text(x=0.135,y=0.82,labels="Cases per\n100,000 people",adj=1,cex=0.85)
+title(main="Incidence of Measles in the US",line=1,oma=T,adj=0.21)
+dev.off()
+
+
+#textcol <- "grey40"
+# # further modified ggplot
+# ps <- ggplot(summary.dt,aes(x=period,y=State.District.ID,fill=Duration.of.Event))+
+#   geom_tile(colour="white",size=0.2)+
+#   guides(fill=guide_legend(title="Cases per\n100,000 people"))+
+#   labs(x="",y="",title="Incidence of Measles in the US")+
+#   scale_y_discrete(expand=c(0,0))+
+#   scale_x_discrete(expand=c(0,0),breaks=c("Aug17-Feb18"  ,"Mar18-July18" ,"Aug18-Feb19", "Mar19-July19" ,
+#                                           "Aug19-Feb20" , "Mar20-July20" ,"Aug20-Feb21","Mar21-July21" , "Aug21-Feb22"))+
+#   scale_fill_manual(values=c("#d53e4f","#f46d43","#fdae61","#fee08b","#e6f598","#abdda4","#ddf1da","#ddf1db"),na.value = "grey90")+
+#   #coord_fixed()+
+#   theme_grey(base_size=10)+
+#   theme(legend.position="right",legend.direction="vertical",
+#         legend.title=element_text(colour=textcol),
+#         legend.margin=margin(grid::unit(0,"cm")),
+#         legend.text=element_text(colour=textcol,size=7,face="bold"),
+#         legend.key.height=grid::unit(0.8,"cm"),
+#         legend.key.width=grid::unit(0.2,"cm"),
+#         axis.text.x=element_text(size=10,colour=textcol),
+#         axis.text.y=element_text(vjust=0.2,colour=textcol),
+#         axis.ticks=element_line(size=0.4),
+#         plot.background=element_blank(),
+#         panel.border=element_blank(),
+#         plot.margin=margin(0.7,0.4,0.1,0.2,"cm"),
+#         plot.title=element_text(colour=textcol,hjust=0,size=14,face="bold"))
+# 
+# #export figure
+# ggsave(ps,filename="~/Desktop/mod3.png",height=50,width=50,units="in",dpi=200,limitsize = FALSE)
+
+
+p <- ggplot(summary.dt,aes(x=period,y=State.District.ID,fill=Duration.of.Event))+
+  #add border white colour of line thickness 0.25
+  geom_tile(colour="white",size=0.25)+
+  #remove x and y axis labels
+  labs(x="",y="")+
+  #remove extra space
+  scale_y_discrete(expand=c(0,0))+
+  #define new breaks on x-axis
+  scale_x_discrete(expand=c(0,0),
+                   breaks=c("Aug17-Feb18"  ,"Mar18-July18" ,
+                            "Aug18-Feb19", "Mar19-July19" , "Aug19-Feb20" , "Mar20-July20" ,
+                            "Aug20-Feb21","Mar21-July21" , "Aug21-Feb22"))+
+  #set a base size for all fonts
+  theme_grey(base_size=8)+
+  #theme options
   theme(
-    panel.border=element_rect(fill=NA, color="white", size=0.5),
-    panel.spacing=grid::unit(0, "lines"))+
-  ##coord_equal(expand=FALSE)+
-  geom_tile(aes(
-    design.col, 1, fill=intensity),
-    data=last.image.dt)+
-  scale_fill_gradient(low="black", high="white")+
-  scale_x_continuous(
-    "Pixel index", breaks=c(1, seq(100, 700, by=100), nrow(last.image.dt)))
-print(gg)
+    #bold font for legend text
+    legend.text=element_text(face="bold"),
+    #set thickness of axis ticks
+    axis.ticks=element_line(size=0.4),
+    #remove plot background
+    plot.background=element_blank(),
+    #remove plot border
+    panel.border=element_blank())
+
+#save with dpi 200
+png(filename="~/Desktop/working-heatmap.png",5000,10000)
+print(p)
+dev.off()
+
+#ggsave(p,filename="measles-mod1.png",height=5.5,width=8.8,units="in",dpi=200)
+
+png(filename="~/Desktop/307-11-21-heatmap.png",5000,10000)
+print(p)
+dev.off()
+
+#save plot to working directory
+
+#save plot to working directory
+ggsave(p,filename="~/Desktop/basic.png")
+
+library(ggplot2)
+library(hrbrthemes)
+library(plotly)
+
+# Dummy data
+x <- LETTERS[1:20]
+y <- paste0("var", seq(1,20))
+data <- expand.grid(X=x, Y=y)
+data$Z <- runif(400, 0, 5)
+
+# new column: text for tooltip:
+data <- data %>%
+  mutate(text = paste0("x: ", x, "\n", "y: ", y, "\n", "Value: ",round(Z,2), "\n", "What else?"))
+
+# classic ggplot, with text in aes
+p <- ggplot(data, aes(X, Y, fill= Z, text=text)) + 
+  geom_tile() +
+  theme_ipsum()
+
+ggplotly(p, tooltip="text")
+
+
+
+

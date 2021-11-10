@@ -25,12 +25,12 @@ coachingdatecheck <- read.csv("/Users/akhilachowdarykolla/Documents/Coding/devel
 required.timeframe.cols <- coachingdatecheck[,c(1,4,5,8)]
 head(required.timeframe.cols)
 
-required.date.id <- as.data.table(coachingdatecheck[,c(4,8)])
+required.date.id <- data.table::data.table(coachingdatecheck[,c(4,8)])
 
+it <- head(required.date.id,8)
+nt <-dcast(setDT(it), rowid(State.District.ID) ~ State.District.ID, value.var = "Date.of.Event.Visit")[, State.District.ID := NULL][]
+nt
 
-
-library(data.table)
-nt <-dcast(setDT(required.date.id), rowid(State.District.ID) ~ State.District.ID, value.var = "Date.of.Event.Visit")[, State.District.ID := NULL][]
 nt <- as.data.frame(nt)
 for(i in 1:ncol(nt)){
   nt[,i] <- as.POSIXct(nt[,i], format =  "%m/%d/%Y")

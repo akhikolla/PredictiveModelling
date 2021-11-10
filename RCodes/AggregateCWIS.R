@@ -64,6 +64,22 @@ cwis_mean_cols <- c("experience","member_grade_span_level","admin_receive_coachi
 tesit[, cwis_mean_cols] <- tesit[, lapply(.SD, as.numeric), .SDcols = cwis_mean_cols]
 nt <-tesit[, lapply(.SD, mean), .SDcols = cwis_mean_cols,by = "State.District.ID"]
 
+
+
+multinomial_matrix <- matrix(0, nrow = 186, ncol = 5)
+
+districts.values <- unique(cwis.dt$State.District.ID)
+for(itr in districts.values){
+  
+  row.value <- cwis.dt[cwis.dt$State.District.ID == itr]
+  for(row in 1:nrow(row.value)){
+    ETL.score <- row.value[row,]$ETL.AVERAGE
+    multinomial_matrix[row]
+  }
+  heat.data[row.value$State.District.ID,row.value$period] <- heat.data[row.value$State.District.ID,row.value$period] + 1
+}
+
+
 cwis.dt[, cwis_mean_cols] <- cwis.dt[, lapply(.SD, as.numeric), .SDcols = cwis_mean_cols]
 cwis.aggregate <- cwis.dt[, lapply(.SD, mean), .SDcols = cwis_mean_cols,by = c("State.District.ID","created_at")]
 #cwis.aggregate <- unique(cwis.dt, by = "State.District.ID")
@@ -72,7 +88,7 @@ cwis.aggregate.df <- as.data.frame(cwis.aggregate)
 #'data.frame':	230 obs. of  87 variables:
 #'Current
 
-write.csv(cwis.aggregate.df,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/correct_cwis_aggregate_districts.csv", row.names = FALSE)
+#write.csv(cwis.aggregate.df,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/correct_cwis_aggregate_districts.csv", row.names = FALSE)
 
 
 
@@ -81,7 +97,7 @@ cwis.aggregate.peryear<- as.data.table(cwis.aggregate)
 #str(cwis.aggregate.updated)
 #592 obs. of  88 variables:
 
-write.csv(cwis.aggregate.peryear,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/cwis_aggregate_peryear.csv", row.names = FALSE)
+#write.csv(cwis.aggregate.peryear,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/cwis_aggregate_peryear.csv", row.names = FALSE)
 
 
 
@@ -103,7 +119,7 @@ for(i in 1:ncol(cwis.aggregate.df)){
 }
 
 
-write.csv(cwis.aggregate.df,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/correct_cwis_aggregate_districts.csv", row.names = FALSE)
+#write.csv(cwis.aggregate.df,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/correct_cwis_aggregate_districts.csv", row.names = FALSE)
 
 # cwis.aggregate <- cwis.aggregate[-c(2,3,4)] 
 
@@ -119,7 +135,7 @@ nces.cwis.dt <-nces.dt[as.data.table(cwis.aggregate.df),on=.(State.School.ID),no
 
 cwis.aggregrate.districts <- districts.aggregate.dt[cwis.aggregate.df,on=.(State.District.ID ),nomatch = NULL]
 #Classes ‘data.table’ and 'data.frame':	186 obs. of  100 variables:
-write.csv(cwis.aggregrate.districts,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/coaching_cwis_aggregrate_districts.csv", row.names = FALSE)
+#write.csv(cwis.aggregrate.districts,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/coaching_cwis_aggregrate_districts.csv", row.names = FALSE)
 
 
 cwis.dt[, cwis_required_cols] <- cwis.dt[, lapply(.SD, as.numeric), .SDcols = cwis_required_cols]
