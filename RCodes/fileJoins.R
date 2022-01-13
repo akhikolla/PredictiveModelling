@@ -19,6 +19,8 @@
 #                                required.coaching.cols[,j] == ""] <- 0
 #   
 # }
+#coaching.dt <-as.data.table(required.coaching.cols)
+
 
 #nces data
 newncesupdate <-read.csv("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/UpdatedNCES.csv")#,check.names=TRUE)
@@ -222,12 +224,12 @@ required.interaction.cols <- coachingdata[,c(4,5,6,7,8,9)]
 library(data.table)    
 consistency.Metric <- data.table(District=numeric(), year=numeric(), ETL.FALL_Aug_Mar=numeric(),ETL.Spring.April_July=numeric(),Improvement=ETL.FALL_Aug_Mar-ETL.Spring.April_July)
 consistency.Metric
-
-consistency.Metric <- data.table(District=numeric(), year=numeric(), MONTH=numeric(),ETL.FALL_Aug_Mar Avg of ETL for that months from CWIS,ETL.Spring.April_July=,Improvement=ETL.FALL_Aug_Mar-ETL.Spring.April_July)
-consistency.Metric
-
-District year semester ETL_Domain
-10090 18-19    fall      mean(all fall months)
+# 
+# consistency.Metric <- data.table(District=numeric(), year=numeric(), MONTH=numeric(),ETL.FALL_Aug_Mar Avg of ETL for that months from CWIS,ETL.Spring.April_July=,Improvement=ETL.FALL_Aug_Mar-ETL.Spring.April_July)
+# consistency.Metric
+# 
+# District year semester ETL_Domain
+# 10090 18-19    fall      mean(all fall months)
 
 #how imp rate of coaching is used for predictiong ETL average
 
