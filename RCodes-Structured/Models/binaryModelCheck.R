@@ -40,7 +40,7 @@ for(i in 1:nrow(combined.binary.input.data)) {
 write.csv(combined.binary.input.data,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/binary_factored_combined_binary.input_data.csv", row.names = FALSE)
 
 
-binary.input.data<- data.table::fread("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/binary_factored_combined_binary.input_data.csv")
+binary.input.data<- data.table::fread("/Users/akhilachowdarykolla/Documents/PredictiveModelling/data/binary_factored_combined_binary.input_data.csv")
 head(binary.input.data)
 binary.input.data <- binary.input.data[,-c(1,2,19)]
 
@@ -107,6 +107,10 @@ for(i in 1:split){
   ordforres <- ordfor(depvar="BinaryETL", data=ordfor_train, nsets=1000, ntreeperdiv=100,
                       ntreefinal=5000, perffunction = "probability")
   
+  party_tree = ctree(BinaryETL~., datatrain)
+
+  
+  
   one.pred <- function(x)rep(x, nrow(test))
   as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
   freq <-as.data.frame(table(y_train))
@@ -119,8 +123,9 @@ for(i in 1:split){
     baseline.l0=as.integer(one.pred(as.numeric.factor(freq[which.max(freq$Freq),]$y_train))),
     baseline.l1=as.integer(one.pred(median.ind.val)),
     baseline.l2=as.integer(one.pred(mean.ind.val)),
-    ordnet.pred = as.integer(predict(ordnet$fit,newx=(test), type="class",whichLambda=bestLambdaIndex) -1),
-    ordinalForest=as.integer(as.integer(predict(ordforres, newdata=(ordfor_test),type="class")$ypred) - 1))
+    ordnet = as.integer(ordinalNet::predict(ordnet$fit,newx=(test), type="class",whichLambda=bestLambdaIndex) -1),
+    ordinalForest=as.integer(as.integer(ordinalForest::predict(ordforres, newdata=(ordfor_test),type="class")$ypred) - 1),
+    DecisionTree = as.integer(predict(party_tree, datatest, type = "response"))-1)
   
   accuracy.dt.list <- list()
   for(algo in names(predictions.list)){
@@ -131,7 +136,8 @@ for(i in 1:split){
     accuracy.dt.list[[algo]] <- data.table(
       algo.name = algo,
       misclassfication.error= mean(pred.vec != actual),
-      log.loss.error=MLmetrics::LogLoss(y_pred = pred.vec, y_true = actual)
+      log.loss.error=MLmetrics::LogLoss(y_pred = pred.vec, y_true = actual),
+      auc.loss.error= auc(actual, pred.vec)
     )
   }
       #meanabs.error.percent= mean(abs((pred.vec) - (y_test$ETL.AVERAGE))),
@@ -157,14 +163,20 @@ ggplot()+
     x = log.loss.error,y=model)) + ggtitle("LogLossordinalNetVsglmnetVsbaslinesVsordinalForest") 
 
 #010
-final.accuracy.list <- do.call(rbind, accuracy.dt) 
-final.accuracy.list
 error.values = final.accuracy.list$accuracies.misclassfication.error#final.accuracy.list$accuracies.error.percent
 model=final.accuracy.list$accuracies.algo.name
 misclassification.loss.error = error.values
 ggplot()+
   geom_point(aes(
     x = misclassification.loss.error,y=model)) + ggtitle("MisclassficationErrorordinalNetVsglmnetVsbaslinesVsordinalForest") 
+
+error.values = final.accuracy.list$accuracies.auc.loss.error
+model=final.accuracy.list$accuracies.algo.name
+auc.loss.error = error.values
+ggplot()+
+  geom_point(aes(
+    x = auc.loss.error,y=model)) + ggtitle("AUCErrorordinalNetVsglmnetVsbaslinesVsordinalForest") 
+
 
 
 #949 rows 

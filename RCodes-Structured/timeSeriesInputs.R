@@ -4,7 +4,7 @@ library("data.table")
 library("lubridate")
 library("dplyr")
 
-coachingdatecheck <- read.csv("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/Coaching logs Fall 2017- Spring 2021/Condensed columns-Table 1.csv")#,header = TRUE,check.names=TRUE,format = "%m/%d/%Y"  )
+coachingdatecheck <- read.csv("/Users/akhilachowdarykolla/Documents/PredictiveModelling/Coaching logs Fall 2017- Spring 2021/Condensed columns-Table 1.csv")#,header = TRUE,check.names=TRUE,format = "%m/%d/%Y"  )
 required.timeframe.cols <- coachingdatecheck[,c(4,5,8)]
 head(required.timeframe.cols)
 tail(required.timeframe.cols)

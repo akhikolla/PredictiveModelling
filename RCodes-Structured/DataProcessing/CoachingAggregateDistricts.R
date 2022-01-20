@@ -1,4 +1,4 @@
-coachingdata <- read.csv("/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/Coaching logs Fall 2017- Spring 2021/Condensed columns-Table 1.csv")#,header = TRUE,check.names=TRUE )
+coachingdata <- read.csv("/Users/akhilachowdarykolla/Documents/PredictiveModelling/Coaching logs Fall 2017- Spring 2021/Condensed columns-Table 1.csv")#,header = TRUE,check.names=TRUE )
 required.coaching.cols <- coachingdata[,c(4,5,6,8,9,21,23,25,27,29,31,33,41,42,43,44,46)]
 
 required.coaching.cols$Year <- as.numeric(paste0("20",sapply(strsplit(as.character(
@@ -118,13 +118,6 @@ resultant_for_one_column <- rbind(one_district_manage, res_Row)              # A
 
 
 write.csv(resultant_for_one_column,"/Users/akhilachowdarykolla/Documents/Coding/development/PredictiveModelling/resultant_for_one_column.csv", row.names = FALSE)
-
-
-
-
-
-
-
 
 weight.dt <- do.call(rbind, weight.dt.list)
 

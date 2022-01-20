@@ -54,7 +54,17 @@ dev.off()
 required.timeframe.cols.date <- required.timeframe.cols[order(rank(as.numeric(sapply(strsplit(as.character(Date.of.Event.Visit),'/'), "[", 3))), Duration.of.Event)]
 
 dts <- head(required.timeframe.cols.date,100)
-gg.district.compares <- ggplot(data=dts, aes(x=Date.of.Event.Visit,y=Duration.of.Event))+ 
+
+remove.frequnitl.3 <- res[!(periods.freq == 3)]
+remove.frequnitl.2 <- remove.frequnitl.3[!(periods.freq == 2)]
+remove.frequnitl.1 <- remove.frequnitl.2[!(periods.freq == 1)]
+stateIDs <- unique(remove.frequnitl.1$State.District.ID)
+onlyStateIDs <- required.timeframe.cols.date[State.District.ID %in% stateIDs]
+  
+onlyStateIDs <- onlyStateIDs[!(summary.dt$period == "Mar1-July1")]
+summary.dt <- summary.dt[!(summary.dt$period == "Aug207-Feb208")]
+
+gg.district.compares <- ggplot(data=onlyStateIDs, aes(x=Date.of.Event.Visit,y=Duration.of.Event))+ 
   geom_point() + 
   facet_wrap(~State.District.ID,nrow=6,ncol=2 ,scales="free_x") + geom_hline(yintercept=4.0,linetype="dashed", color = "blue") +
   geom_hline(yintercept=8.0,linetype="dashed", color = "red")
@@ -73,7 +83,7 @@ ggplot(data=dts, aes(x=Date.of.Event.Visit,y=Duration.of.Event))+
 gg.district.compares + labs(x = "Academic Year") + labs(y="Duration of the Coaching")
 
 
-png(filename="~/Desktop/figure-district-timeseries-date.png",2000,10000)
+png(filename="~/Desktop/timecheck.png",2000,10000)
 print(gg.district.compares)
 dev.off()
 
